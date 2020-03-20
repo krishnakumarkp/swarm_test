@@ -1,0 +1,38 @@
+version: '3.7'
+
+networks:
+    lamp-network:
+    
+services:
+    web-server:
+        image: krishnakumarkp/lampserver 
+        ports: 
+            - "80:80"
+        networks:
+            - lamp-network
+        volumes:
+            - type: bind
+              source: ./app
+              target: /var/www/html
+        deploy:
+            replicas: 1
+            update_config:
+                parallelism: 2
+                delay: 10s
+            restart_policy:
+                condition: on-failure
+    db-server:
+        image: mysql:8.0
+        ports: 
+            - "3306:3306"
+        command: --default-authentication-plugin=mysql_native_password
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: 12345678
+            MYSQL_DATABASE: myDb
+        networks:
+            - lamp-network
+        deploy:
+            replicas: 1
+            placement:
+                constraints: [node.role == manager]

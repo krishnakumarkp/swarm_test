@@ -1,0 +1,21 @@
+docker build -t krishnakumarkp/lampserver ./webserver
+
+docker swarm init 
+
+docker swarm init --advertise-addr 192.168.100.12
+
+create overlay netowrk 
+
+docker network create -d overlay lamp-network
+
+
+docker run --name db-server -e MYSQL_ROOT_PASSWORD=12345678 -e MYSQL_DATABASE=myDb -d  -p 3306:3306 --network=lamp-network mysql:8.0
+
+docker service create --name vote -p 80:80 --network frontend --replicas 2 bretfisher/examplevotingapp_vote
+
+docker service create --name db-server -e MYSQL_ROOT_PASSWORD=12345678 -e MYSQL_DATABASE=myDb -d  -p 3306:3306 --network=lamp-network --replicas 1 mysql:8.0
+
+docker service create --name web-server -d -p 80:80 --mount type=bind,source=/home/krishna/files/app,destination=/var/www/html --network=lamp-network --replicas 1 krishnakumarkp/lampserver 
+
+
+docker stack deploy --compose-file stack.yml lampapp
